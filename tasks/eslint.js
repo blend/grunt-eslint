@@ -6,7 +6,8 @@ module.exports = function (grunt) {
 	grunt.registerMultiTask('eslint', 'Validate files with ESLint', function () {
 		var opts = this.options({
 			outputFile: false,
-			quiet: false
+			quiet: false,
+			maxWarnings: -1
 		});
 
 		// legacy
@@ -40,6 +41,10 @@ module.exports = function (grunt) {
 			return false;
 		}
 
+		if (opts.fix) {
+			eslint.CLIEngine.outputFixes(report);
+		}
+
 		var results = report.results;
 
 		if (opts.quiet) {
@@ -52,6 +57,12 @@ module.exports = function (grunt) {
 			grunt.file.write(opts.outputFile, output);
 		} else {
 			console.log(output);
+		}
+
+		var tooManyWarnings = opts.maxWarnings >= 0 && report.warningCount > opts.maxWarnings;
+
+		if (report.errorCount === 0 && tooManyWarnings) {
+			grunt.warn('ESLint found too many warnings (maximum:' + opts.maxWarnings + ')');
 		}
 
 		return report.errorCount === 0;
